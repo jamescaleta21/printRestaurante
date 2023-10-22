@@ -58,6 +58,7 @@ Attribute VB_Exposed = False
 '* CODIGO       FECHA       RESPONSABLE         MOTIVO
 '* -------------------------------------------------------------------------------------------------------------------------------------------------
 '* (@#)1-A      21/10/2023  JMENDOZA            ENVIAR PRECUENTA A IMPRESIÓN
+'* (@#)2-A      22/10/2023  JMENDOZA            LEER VARIABLE CODCIA DESDE INI Y ESCRIBIR LOG DE ERROR
 '* -------------------------------------------------------------------------------------------------------------------------------------------------
 
 Option Explicit
@@ -109,6 +110,7 @@ Private c_DataBase As String
 Private c_Usr As String
 Private c_Pwd As String
 '(@#)1-A fin
+Private c_CodCia As String      '(@#)2-A
 
 
 Private Sub RemoverSystray()
@@ -192,9 +194,11 @@ Private Sub mnusalir_Click()
   If MsgBox("¿ Salir ?", vbOKCancel + vbQuestion) = vbOK Then Unload Me
 End Sub
 
-
 Private Sub Imprimir()
- Dim orsMain  As ADODB.Recordset
+
+    On Error GoTo xImprimir '(@#)2-A
+
+    Dim orsMain  As ADODB.Recordset
 
     Dim orsFam   As ADODB.Recordset
 
@@ -229,8 +233,11 @@ Private Sub Imprimir()
     
     orsTMP.Fields.Refresh
     orsTMP.Open
-    Dim sFiltro As String
-        Dim i As Integer
+
+    Dim sFiltro    As String
+
+    Dim i          As Integer
+
     Dim MyMatriz() As String
 
     Do While Not orsMain.EOF 'recorriendo los datos principales
@@ -246,6 +253,7 @@ Private Sub Imprimir()
                     orsTMP.AddNew
                     orsTMP!Familia = MyMatriz(i)
                     orsTMP.Update
+
                 End If
 
             Next
@@ -263,6 +271,7 @@ Private Sub Imprimir()
                     sFiltro = sFiltro & "IDFAMILIA=" & orsTMP!Familia
                 Else
                     sFiltro = sFiltro & "IDFAMILIA=" & orsTMP!Familia & " OR "
+
                 End If
 
                 IC = IC + 1
@@ -283,6 +292,7 @@ Private Sub Imprimir()
 
                     Case "Mensaje"
                         crParamDef.AddCurrentValue CStr(orsMain!Mensaje)
+
                 End Select
 
             Next
@@ -337,6 +347,7 @@ Private Sub Imprimir()
 
                         Case "Mensaje"
                             crParamDef.AddCurrentValue CStr(orsMain!Mensaje)
+
                     End Select
 
                 Next
@@ -344,7 +355,7 @@ Private Sub Imprimir()
             End If
             
             If Len(Trim(orsFam!IMPRESORA2)) <> 0 Then
-             VReporte.Database.SetDataSource orsFINAL, 3, 1
+                VReporte.Database.SetDataSource orsFINAL, 3, 1
                 VReporte.SelectPrinter Printer.DriverName, CStr(orsFam!IMPRESORA2), Printer.Port
                 'VReporte.SelectPrinter Printer.DriverName, "", Printer.Port
                 VReporte.PrintOut False, 1, , 1, 1
@@ -363,9 +374,11 @@ Private Sub Imprimir()
 
                         Case "Mensaje"
                             crParamDef.AddCurrentValue CStr(orsMain!Mensaje)
+
                     End Select
 
                 Next
+
             End If
 
             ' orsFam.MoveNext
@@ -382,6 +395,7 @@ Private Sub Imprimir()
                     Loop
 
                 End If
+
             End If
 
             orsFam.MoveNext
@@ -410,6 +424,12 @@ Private Sub Imprimir()
 
     End If
 
+    '(@#)2-A inicio
+    Exit Sub
+xImprimir:
+    EscribirLog Err.Description & " => Private Sub Imprimir()"
+
+    '(@#)2-A fin
 End Sub
 
 Private Sub Timer1_Timer()
@@ -547,8 +567,10 @@ Private Sub Precuenta()
     Exit Sub
 
 printe:
-    MsgBox Err
-
+    '(@#)2-A inicio
+    EscribirLog Err.Description & " => Private Sub Precuenta()"
+    'MsgBox Err
+    '(@#)2-A fin
 End Sub
 
 Private Sub CargarVariablesConexion()
@@ -556,15 +578,82 @@ c_Server = Leer_Ini(App.Path & "\config.ini", "SERVER", "localhost")
 c_DataBase = Leer_Ini(App.Path & "\config.ini", "DATABASE", "BDATOS")
 c_Usr = Leer_Ini(App.Path & "\config.ini", "USR", "sa")
 c_Pwd = Leer_Ini(App.Path & "\config.ini", "PWD", "anteromariano")
-strCnn = "PROVIDER=MSDASQL;driver={SQL Server};server=" + c_Server + ";database=" + c_DataBase + ";uid=" + c_Usr + ";pwd=" + c_Pwd + ";"
+'(@#)2-A inicio
+'strCnn = "PROVIDER=MSDASQL;driver={SQL Server};server=" + c_Server + ";database=" + c_DataBase + ";uid=" + c_Usr + ";pwd=" + c_Pwd + ";"
+strCnn = "Provider=SQLOLEDB;Data Source=" + c_Server + ";Initial Catalog=" + c_DataBase + ";User ID=" + c_Usr + ";Password=" + c_Pwd + ";Connection Timeout=5;"
+c_CodCia = Leer_Ini(App.Path & "\config.ini", "CODCIA", "01")
+'(@#)2-A fin
 End Sub
 
 Private Sub Conectar()
-Cnn.Open strCnn
+
+    '(@#)2-A inicio
+    On Error GoTo xConectar
+
+    Cnn.Open strCnn
+    Exit Sub
+xConectar:
+    EscribirLog Err.Description & " => Private Sub Conectar()"
+
+    '(@#)2-A fin
 End Sub
 
 Private Sub Desconectar()
-Cnn.Close
+
+    '(@#)2-A inicio
+    On Error GoTo xDesconectar
+
+    Cnn.Close
+    Exit Sub
+xDesconectar:
+    EscribirLog Err.Description & " => Private Sub Desconectar()"
+
+    '(@#)2-A fin
 End Sub
 
 '(@#)1-A fin
+'(@#)2-A inicio
+Private Sub EscribirLog(xMensaje As String)
+
+    Dim fso         As Object
+
+    Dim txtFile     As Object
+
+    Dim logFilePath As String
+
+    Dim logMessage  As String
+
+    ' Especifica la ubicación y nombre del archivo de registro
+    logFilePath = App.Path & "\error_" & Replace(CStr(Date), "/", "-") & ".log" ' "C:\Ruta\al\Archivo\Log.txt"
+
+    ' Mensaje que deseas registrar
+    logMessage = "[ERROR]: " & Now & " => " & xMensaje
+
+    ' Crear una instancia del objeto FileSystemObject
+    Set fso = CreateObject("Scripting.FileSystemObject")
+
+    ' Verificar si el archivo de registro existe
+    If Not fso.FileExists(logFilePath) Then
+        ' Si el archivo no existe, créalo
+        Set txtFile = fso.CreateTextFile(logFilePath)
+        txtFile.WriteLine "Log File Created: " & Now
+        txtFile.Close
+
+    End If
+
+    ' Abre el archivo de registro en modo adición (para agregar registros)
+    Set txtFile = fso.OpenTextFile(logFilePath, 8)
+
+    ' Escribe el mensaje de registro en el archivo
+    txtFile.WriteLine logMessage
+
+    ' Cierra el archivo de registro
+    txtFile.Close
+
+    ' Limpia las referencias a los objetos
+    Set txtFile = Nothing
+    Set fso = Nothing
+
+End Sub
+
+'(@#)2-A fin

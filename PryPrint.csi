@@ -1,9 +1,11 @@
 [History]
-1=#P0#=mb	#P1#=Desconectar	#P2#=PryPrint/frmPrint/Desconectar	#P3#=	#P4#=	#P5#=MembMethodPublic	#P6#=20231022031729	#P7#=0	#P8#=1	.
-2=#P0#=mb	#P1#=CargarVariablesConexion	#P2#=PryPrint/frmPrint/CargarVariablesConexion	#P3#=	#P4#=	#P5#=MembMethodPublic	#P6#=20231022032001	#P7#=0	#P8#=4	.
-3=#P0#=mb	#P1#=RemoverSystray	#P2#=PryPrint/frmPrint/RemoverSystray	#P3#=	#P4#=	#P5#=MembMethodPublic	#P6#=20231022030649	#P7#=0	#P8#=-4	.
-4=#P0#=mb	#P1#=Form_Unload	#P2#=PryPrint/frmPrint/Form_Unload	#P3#=	#P4#=	#P5#=MembEventProcPrivate	#P6#=20231021225315	#P7#=0	#P8#=0	.
-5=#P0#=mb	#P1#=precuenta	#P2#=PryPrint/frmPrint/precuenta	#P3#=	#P4#=	#P5#=MembMethodPublic	#P6#=20231022031725	#P7#=0	#P8#=116	.
-6=#P0#=mb	#P1#=Timer1_Timer	#P2#=PryPrint/frmPrint/Timer1_Timer	#P3#=	#P4#=	#P5#=MembEventProcPrivate	#P6#=20231022031702	#P7#=0	#P8#=1	.
-7=#P0#=mb	#P1#=Imprimir	#P2#=PryPrint/frmPrint/Imprimir	#P3#=	#P4#=	#P5#=MembMethodPublic	#P6#=20231022032506	#P7#=0	#P8#=0	.
+1=#P0#=mb	#P1#=Conectar	#P2#=PryPrint/frmPrint/Conectar	#P3#=	#P4#=	#P5#=MembMethodPublic	#P6#=20231022095645	#P7#=0	#P8#=8	.
+2=#P0#=mb	#P1#=EscribirLog	#P2#=PryPrint/frmPrint/EscribirLog	#P3#=	#P4#=	#P5#=MembMethodPublic	#P6#=20231022095702	#P7#=0	#P8#=2	.
+3=#P0#=mb	#P1#=Imprimir	#P2#=PryPrint/frmPrint/Imprimir	#P3#=	#P4#=	#P5#=MembMethodPublic	#P6#=20231022095622	#P7#=0	#P8#=233	.
+4=#P0#=mb	#P1#=CargarVariablesConexion	#P2#=PryPrint/frmPrint/CargarVariablesConexion	#P3#=	#P4#=	#P5#=MembMethodPublic	#P6#=20231022095333	#P7#=0	#P8#=5	.
+5=#P0#=mb	#P1#=Desconectar	#P2#=PryPrint/frmPrint/Desconectar	#P3#=	#P4#=	#P5#=MembMethodPublic	#P6#=20231022095648	#P7#=0	#P8#=10	.
+6=#P0#=mb	#P1#=precuenta	#P2#=PryPrint/frmPrint/precuenta	#P3#=	#P4#=	#P5#=MembMethodPublic	#P6#=20231022095638	#P7#=0	#P8#=128	.
+7=#P0#=mb	#P1#=Timer1_Timer	#P2#=PryPrint/frmPrint/Timer1_Timer	#P3#=	#P4#=	#P5#=MembEventProcPrivate	#P6#=20231022093806	#P7#=0	#P8#=1	.
 8=#P0#=mb	#P1#=Form_Load	#P2#=PryPrint/frmPrint/Form_Load	#P3#=	#P4#=	#P5#=MembEventProcPrivate	#P6#=20231022031627	#P7#=0	#P8#=2	.
+9=#P0#=mb	#P1#=RemoverSystray	#P2#=PryPrint/frmPrint/RemoverSystray	#P3#=	#P4#=	#P5#=MembMethodPublic	#P6#=20231022092753	#P7#=0	#P8#=-3	.
+10=#P0#=mb	#P1#=Form_Unload	#P2#=PryPrint/frmPrint/Form_Unload	#P3#=	#P4#=	#P5#=MembEventProcPrivate	#P6#=20231021225315	#P7#=0	#P8#=0	.
