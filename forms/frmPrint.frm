@@ -52,7 +52,13 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-
+'* --------------------+----------------------------------------------------------------------------------------------------------------------------
+'* BITACORA DE CAMBIOS |
+'* --------------------+----------------------------------------------------------------------------------------------------------------------------
+'* CODIGO       FECHA       RESPONSABLE         MOTIVO
+'* -------------------------------------------------------------------------------------------------------------------------------------------------
+'* (@#)1-A      21/10/2023  JMENDOZA            ENVIAR PRECUENTA A IMPRESIÓN
+'* -------------------------------------------------------------------------------------------------------------------------------------------------
 
 Option Explicit
 
@@ -95,7 +101,15 @@ Private Declare Function Shell_NotifyIcon Lib "shell32" Alias "Shell_NotifyIconA
 ' -- variables para la estructura NOTIFYICONDATA
 Dim systray As NOTIFYICONDATA
 'CONEXION
-Const strCnn As String = "dsn=dsn_datos;uid=sa;pwd=anteromariano;database=bdatos;"
+'(@#)1-A inicio
+'Const strCnn As String = "dsn=dsn_datos;uid=sa;pwd=accesodenegado$1;database=DBSRVRESTAURANT;"
+Private strCnn As String
+Private c_Server As String
+Private c_DataBase As String
+Private c_Usr As String
+Private c_Pwd As String
+'(@#)1-A fin
+
 
 Private Sub RemoverSystray()
     Shell_NotifyIcon NIM_DELETE, systray
@@ -130,7 +144,10 @@ Imprimir
 End Sub
 
 Private Sub Form_Load()
-    Cnn.Open strCnn
+    '(@#)1-A inicio
+    CargarVariablesConexion
+    'Cnn.Open strCnn
+    '(@#)1-A fin
     Me.Hide
     PonerSystray
 End Sub
@@ -161,6 +178,7 @@ Dim msg As Long
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
+Cnn.Close
  RemoverSystray
 End Sub
 
@@ -196,7 +214,7 @@ Private Sub Imprimir()
 
     Dim crParamDef  As CRAXDRT.ParameterFieldDefinition
 
-    Dim objCrystal  As New CRAXDRT.Application
+    Dim objCrystal  As New CRAXDRT.APPLICATION
 
     Dim RutaReporte As String
 
@@ -289,8 +307,8 @@ Private Sub Imprimir()
             Loop
             
             oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@CodCia", adChar, adParamInput, 2, "01")
-            oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@NumSer", adChar, adParamInput, 3, orsMain!NUMSER)
-            oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@NumFac", adDouble, adParamInput, , orsMain!NUMFAC)
+            oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@NumSer", adChar, adParamInput, 3, orsMain!numser)
+            oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@NumFac", adDouble, adParamInput, , orsMain!numfac)
             oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@xdet", adVarChar, adParamInput, 4000, vdata)
             oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@xnumsec", adVarChar, adParamInput, 4000, vnumsec)
 
@@ -395,5 +413,158 @@ Private Sub Imprimir()
 End Sub
 
 Private Sub Timer1_Timer()
+Conectar '(@#)1-A
 Imprimir
+Precuenta
+Desconectar '(@#)1-A
 End Sub
+
+'(@#)1-A inicio
+Private Sub Precuenta()
+
+    On Error GoTo printe
+    
+    Dim orsPendientes As ADODB.Recordset
+
+    'obteniendo datos de tabla de impresion
+    LimpiaParametros oCmdEjec
+    oCmdEjec.CommandText = "USP_PEDIDOS_POR_IMPRIMIR"
+    oCmdEjec.CommandType = adCmdStoredProc
+    
+    oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@CodCia", adChar, adParamInput, 2, "01")
+
+    Set orsPendientes = oCmdEjec.Execute
+    
+    Do While Not orsPendientes.EOF
+
+        Dim ORSSepara As ADODB.Recordset
+
+        LimpiaParametros oCmdEjec
+        oCmdEjec.CommandType = adCmdStoredProc
+        oCmdEjec.CommandText = "SpSeparaCuentas"
+
+        oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@CodCia", adChar, adParamInput, 2, "01")
+        oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@CODCLIE", adVarChar, adParamInput, 15, orsPendientes!codmesa)
+        oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@FECHA", adChar, adParamInput, 8, orsPendientes!FECHA)
+        oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@NumSer", adChar, adParamInput, 3, orsPendientes!numser)
+        oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@NumFac", adBigInt, adParamInput, , orsPendientes!numfac)
+
+        Set ORSSepara = oCmdEjec.Execute
+
+        Do While Not ORSSepara.EOF
+
+            Dim crParamDefs As CRAXDRT.ParameterFieldDefinitions
+
+            Dim crParamDef  As CRAXDRT.ParameterFieldDefinition
+
+            Dim objCrystal  As New CRAXDRT.APPLICATION
+
+            Dim RutaReporte As String
+
+            RutaReporte = "C:\Admin\Nordi\Comanda2.rpt"
+
+            Set VReporte = objCrystal.OpenReport(RutaReporte, 1)
+            Set crParamDefs = VReporte.ParameterFields
+
+            For Each crParamDef In crParamDefs
+
+                Select Case crParamDef.ParameterFieldName
+
+                    Case "mesa"
+                        crParamDef.AddCurrentValue Str(orsPendientes!codmesa)
+
+                End Select
+
+            Next
+
+            LimpiaParametros oCmdEjec
+            oCmdEjec.CommandType = adCmdStoredProc
+            oCmdEjec.CommandText = "SpPrintComanda2"
+
+            Dim rsd As ADODB.Recordset
+        
+            oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@CodCia", adChar, adParamInput, 2, "01")
+            oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@NumSer", adChar, adParamInput, 3, orsPendientes!numser)
+            oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@NumFac", adDouble, adParamInput, , orsPendientes!numfac)
+            oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@xdet", adVarChar, adParamInput, 4000, "")
+            oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@xnumsec", adVarChar, adParamInput, 4000, "")
+            oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@precuenta", adBoolean, adParamInput, , 1)
+            oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@CTA", adChar, adParamInput, 1, ORSSepara!cuenta)
+
+            Set rsd = oCmdEjec.Execute
+
+            LimpiaParametros oCmdEjec
+            oCmdEjec.CommandText = "SpMesaEnCuenta"
+            oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@CodCia", adChar, adParamInput, 2, "01")
+            oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@CodMesa", adVarChar, adParamInput, 10, orsPendientes!codmesa)
+            oCmdEjec.Execute
+
+            'IMPRESION
+            VReporte.Database.SetDataSource rsd, 3, 1
+            VReporte.SelectPrinter Printer.DriverName, CStr(orsPendientes!Print), Printer.Port
+            VReporte.PrintOut False, 1, , 1, 1
+            Set objCrystal = Nothing
+            Set VReporte = Nothing
+            'IMPRESION
+
+            ORSSepara.MoveNext
+        Loop
+
+        'NUEVO GRABANDO EN LOG
+        '        LimpiaParametros oCmdEjec
+        '        oCmdEjec.CommandText = "SP_COMANDA_PRINT_LOG_INSERT"
+        '        oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@CODCIA", adChar, adParamInput, 2, LK_CODCIA)
+        '        oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@FECHA", adDBTimeStamp, adParamInput, , LK_FECHA_DIA)
+        '        oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@NUMFAC", adBigInt, adParamInput, , lblNumero.Caption)
+        '        oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@USUARIO", adVarChar, adParamInput, 20, LK_CODUSU)
+        '        oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@MOZO", adVarChar, adParamInput, 40, Me.lblMozo.Caption)
+        '        oCmdEjec.Execute
+    
+        orsPendientes.MoveNext
+    
+    Loop
+
+    'LIMPIANDO LA TABLA W_PEDIDO
+    If orsPendientes.RecordCount <> 0 Then
+        orsPendientes.Filter = ""
+        orsPendientes.MoveFirst
+
+        Do While Not orsPendientes.EOF
+            LimpiaParametros oCmdEjec
+            oCmdEjec.CommandText = "SP_COMANDA_DELETEPRINT"
+
+            oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@IDPRINT", adBigInt, adParamInput, , orsPendientes!IDPRINT)
+            oCmdEjec.Parameters.Append oCmdEjec.CreateParameter("@CodCia", adChar, adParamInput, 2, "01")
+
+            oCmdEjec.Execute
+
+            orsPendientes.MoveNext
+
+        Loop
+
+    End If
+
+    Exit Sub
+
+printe:
+    MsgBox Err
+
+End Sub
+
+Private Sub CargarVariablesConexion()
+c_Server = Leer_Ini(App.Path & "\config.ini", "SERVER", "localhost")
+c_DataBase = Leer_Ini(App.Path & "\config.ini", "DATABASE", "BDATOS")
+c_Usr = Leer_Ini(App.Path & "\config.ini", "USR", "sa")
+c_Pwd = Leer_Ini(App.Path & "\config.ini", "PWD", "anteromariano")
+strCnn = "PROVIDER=MSDASQL;driver={SQL Server};server=" + c_Server + ";database=" + c_DataBase + ";uid=" + c_Usr + ";pwd=" + c_Pwd + ";"
+End Sub
+
+Private Sub Conectar()
+Cnn.Open strCnn
+End Sub
+
+Private Sub Desconectar()
+Cnn.Close
+End Sub
+
+'(@#)1-A fin
