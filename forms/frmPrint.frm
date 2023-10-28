@@ -152,7 +152,6 @@ Private Sub Form_Load()
     '(@#)1-A fin
     Me.Hide
     PonerSystray
-    MsgBox "hola" 'guillermo
 End Sub
 
 Private Sub Form_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
