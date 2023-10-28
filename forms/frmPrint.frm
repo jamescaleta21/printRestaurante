@@ -180,7 +180,6 @@ Dim msg As Long
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
-Cnn.Close
  RemoverSystray
 End Sub
 
@@ -499,7 +498,7 @@ Private Sub Precuenta()
 
             LimpiaParametros oCmdEjec
             oCmdEjec.CommandType = adCmdStoredProc
-            oCmdEjec.CommandText = "SpPrintComanda2"
+            oCmdEjec.CommandText = "USP_CUENTA_PRINT"
 
             Dim rsd As ADODB.Recordset
         
